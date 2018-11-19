@@ -1,35 +1,32 @@
 package leitoresEscritores;
 
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
+
+import leitoresEscritores.estrategias.EstrategiaPermissao;
 
 public class Leitor extends Thread {
 	private BancoDeDados bd;
-	private Semaphore mutex;
+	private EstrategiaPermissao estrategiaPermissao;
 
-	public Leitor(BancoDeDados bd, Semaphore mutex) {
+	public Leitor(BancoDeDados bd, EstrategiaPermissao estrategiaPermissao) {
 		super();
 		this.bd = bd;
-		this.mutex = mutex;
+		this.estrategiaPermissao = estrategiaPermissao;
 	}
 
 	@Override
 	@SuppressWarnings("unused")
 	public void run() {
-		try {
-			mutex.acquire();
-
-			ThreadLocalRandom generator = ThreadLocalRandom.current();
-			for (int i = 0; i < 100; i++) {
-				int posAleatoria = generator.nextInt(0, bd.tamanho());
-				String linhaLida = bd.lerPosicao(posAleatoria);
-			}
-			sleep();
-
-			mutex.release();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		estrategiaPermissao.obtemPermissaoLeitor();
+		
+		ThreadLocalRandom generator = ThreadLocalRandom.current();
+		for (int i = 0; i < 100; i++) {
+			int posAleatoria = generator.nextInt(0, bd.tamanho());
+			String linhaLida = bd.lerPosicao(posAleatoria);
 		}
+		sleep();
+		
+		estrategiaPermissao.liberaPermissaoLeitor();
 	}
 
 	private void sleep() {
