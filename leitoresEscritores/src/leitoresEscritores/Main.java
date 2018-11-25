@@ -84,14 +84,14 @@ public class Main {
 	
 			String estrategiaEscolhida = args[0];
 			
-			if(estrategiaEscolhida == "1") {
+			if(estrategiaEscolhida.equals("1")) {
 				System.out.println("A estratégia Bloqueia Sempre será executada");
 			}
-			else if (estrategiaEscolhida == "2") {
+			else if (estrategiaEscolhida.equals("2")) {
 				estrategia = new EstrategiaPermissaoPrioridadeLeitores();
 				System.out.println("A estratégia prioridade leitores será executada");
 			}
-			else if (estrategiaEscolhida == "3") {
+			else if (estrategiaEscolhida.equals("3")) {
 				estrategia = new EstrategiaPermissaoPrioridadeEscritores();
 				System.out.println("A estratégia prioridade escritores será executada");
 			}
