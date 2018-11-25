@@ -4,7 +4,11 @@ import java.util.concurrent.Semaphore;
 
 public class EstrategiaPermissaoBloqueiaSempre implements EstrategiaPermissao {
 
+	// semaforo para controle da regiao compartilhada
 	Semaphore mutex = new Semaphore(1);
+
+	/* tanto leitor quanto escritores tem acesso unico a regiao compartilhada, ou seja,
+	 * basta ter um acessando que para que a regiao fique bloqueada */
 
 	@Override
 	public void obtemPermissaoLeitor() {

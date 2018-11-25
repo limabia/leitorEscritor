@@ -4,10 +4,14 @@ import java.util.concurrent.Semaphore;
 
 public class EstrategiaPermissaoPrioridadeLeitores implements EstrategiaPermissao {
 
+	// semaforo para controlar o recurso a regiao compartilhada
 	Semaphore mutexRecurso = new Semaphore(1);
+	// semaforo para controlar o numero de leitores
 	Semaphore mutexLeitores = new Semaphore(1);
+	// contador de leitores acessando a regiao compartilhada
 	int nLeitores = 0;
 
+	// incrementa o contador de leitores e bloqueia o recurso se ele for o primeiro leitor a entrar
 	@Override
 	public void obtemPermissaoLeitor() {
 		try {
@@ -22,6 +26,7 @@ public class EstrategiaPermissaoPrioridadeLeitores implements EstrategiaPermissa
 		}
 	}
 
+	// decrementa o contador de leitores e libera o recurso usado pelo leitor se ele for o ultimo leitor a sair
 	@Override
 	public void liberaPermissaoLeitor() {
 		try {
@@ -35,6 +40,7 @@ public class EstrategiaPermissaoPrioridadeLeitores implements EstrategiaPermissa
 		}
 	}
 
+	// bloqueia o recurso para o escritor
 	@Override
 	public void obtemPermissaoEscritor() {
 		try {
@@ -43,7 +49,8 @@ public class EstrategiaPermissaoPrioridadeLeitores implements EstrategiaPermissa
 			e.printStackTrace();
 		}
 	}
-
+	
+	// libera o recurso compartilhado
 	@Override
 	public void liberaPermissaoEscritor() {
 		mutexRecurso.release();

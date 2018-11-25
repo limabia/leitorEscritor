@@ -6,12 +6,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import leitoresEscritores.estrategias.EstrategiaPermissao;
 import leitoresEscritores.estrategias.EstrategiaPermissaoBloqueiaSempre;
+import leitoresEscritores.estrategias.EstrategiaPermissaoPrioridadeLeitores;
 import leitoresEscritores.estrategias.EstrategiaPermissaoPrioridadeEscritores;
 
 public class Main {
-
-	// sem uso de Leitores e Escritores, o sistema eh bloqueado em todo e qualquer
-	// acesso a base
+	// classe responsavel por executar o problema de fator, de acordo com a estrategia escolhida
 	public static long executaProblema(BancoDeDados bd, int leitores, int escritores, EstrategiaPermissao estrategiaPermissao) {
 		long tempoInicio = System.currentTimeMillis();
 		Thread[] threads = new Thread[leitores + escritores];
@@ -39,16 +38,13 @@ public class Main {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-
+		
+		// controle do tempo de execucao
 		long tempoFim = System.currentTimeMillis();
 		return tempoFim - tempoInicio;
 	}
-
-	// prioridade dos leitores, o sistema eh bloqueado so em caso de escritores
-	// leitores tem preferencia sob os escritores, deixando eles por ultimo sempre
-
 	
-	// permuta as posicoes do arranjo de threads
+	// responsavel por permutar as posicoes do arranjo de threads
 	private static void embaralhaArray(Object[] array) {
 		ThreadLocalRandom generator = ThreadLocalRandom.current();
 		for (int i = 0; i < array.length - 1; i++) {
@@ -60,29 +56,52 @@ public class Main {
 		}
 	}
 
-	public static void main(String[] args) throws InterruptedException {
+	private static void executaEstrategia(EstrategiaPermissao estrategia) {
 		try {
 			BancoDeDados bd = new BancoDeDados("bd.txt");
-
-			long duracaoTotalGeral = 0l;
+			System.out.println("numero de leitores ; tempo de execução medio");
+			// controla a proporcao de leitores e escritores
 			for (int nLeitores = 0; nLeitores <= 100; nLeitores++) {
 				int nEscritores = 100 - nLeitores;
 				long duracaoTotal = 0l;
-				// executa o problema 50 vezes
+				// executa o problema 50 vezes 
 				for (int i = 0; i < 50; i++) {
-					duracaoTotal += executaProblema(bd, nLeitores, nEscritores, new EstrategiaPermissaoPrioridadeEscritores());
+					duracaoTotal += executaProblema(bd, nLeitores, nEscritores, estrategia);
 				}
-
-				System.out.println(nLeitores + ";" + duracaoTotal / 50);
-				duracaoTotalGeral += duracaoTotal;
+				System.out.println(nLeitores + ";" + duracaoTotal / 50);	
 			}
-			System.out
-					.println("Duração total de todos os casos pra problema: " + duracaoTotalGeral);
-
 		} catch (IOException e) {
-			System.out.println("Erro ao abrir o arquivo");
+			System.out.println("Erro ao abrir o arquivo de dados");
+		}
+	}
+	
+	public static void main(String[] args) throws InterruptedException {
+		// determina qual estrategia sera executada de acordo com a escolha do usuario
+		if (args.length == 1){
+			
+			// estrategia default
+			EstrategiaPermissao estrategia = new EstrategiaPermissaoBloqueiaSempre();
+	
+			String estrategiaEscolhida = args[0];
+			
+			if(estrategiaEscolhida == "1") {
+				System.out.println("A estratégia Bloqueia Sempre será executada");
+			}
+			else if (estrategiaEscolhida == "2") {
+				estrategia = new EstrategiaPermissaoPrioridadeLeitores();
+				System.out.println("A estratégia prioridade leitores será executada");
+			}
+			else if (estrategiaEscolhida == "3") {
+				estrategia = new EstrategiaPermissaoPrioridadeEscritores();
+				System.out.println("A estratégia prioridade escritores será executada");
+			}
+			
+			executaEstrategia(estrategia);
+		}
+		else {
+			System.out.println("escolha uma estrategia para ser executada");
 		}
 
-		System.out.println("fim do programinha fofo");
+		System.out.println("fim do programa");
 	}
 }

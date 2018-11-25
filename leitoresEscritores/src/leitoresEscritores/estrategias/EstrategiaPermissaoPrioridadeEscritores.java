@@ -3,76 +3,62 @@ package leitoresEscritores.estrategias;
 import java.util.concurrent.Semaphore;
 
 public class EstrategiaPermissaoPrioridadeEscritores implements EstrategiaPermissao {
-
-	Semaphore mutexRecurso = new Semaphore(1);
-	Semaphore mutexLeitores = new Semaphore(1);
-	Semaphore mutexEscritores = new Semaphore(1);
-	Semaphore permissaoAdicionarNovoLeitor = new Semaphore(1); // Indica que pode add novos leitores
-	
+	// semaforo para controlar o recurso a regiao compartilhada
+	Semaphore acessoRecurso = new Semaphore(1);
+	// semaforo para controle dos leitores na regiao compartilhada
+	Semaphore acessoNLeitores = new Semaphore(1);
+	// semaforo para controle da fila de espera 
+	Semaphore filaServico = new Semaphore(1);
+	// contador de leitores na regiao compartilhada
 	int nLeitores = 0;
-	int nEscritores = 0;
 
+	// bloqueia a fila, incrementa o contador de leitores, se for o primeiro leitor bloqueia o recurso compartilhado, libera a fila 
 	@Override
 	public void obtemPermissaoLeitor() {
 		try {
-			permissaoAdicionarNovoLeitor.acquire();
-			mutexLeitores.acquire();
+			filaServico.acquire();
+			acessoNLeitores.acquire();
 			nLeitores++;
 			if (nLeitores == 1)
-				mutexRecurso.acquire();
+				acessoRecurso.acquire();
 
-			mutexLeitores.release();
-			permissaoAdicionarNovoLeitor.release();
+			acessoNLeitores.release();
+			filaServico.release();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
-
+	
+	// decrementa o numero de leitores, libera o recurso caso seja o ultimo leitor saindo
 	@Override
 	public void liberaPermissaoLeitor() {
 		try {
-			mutexLeitores.acquire();
+			acessoNLeitores.acquire();
 			nLeitores--;
 			if (nLeitores == 0)
-				mutexRecurso.release();
-			mutexLeitores.release();
+				acessoRecurso.release();
+			acessoNLeitores.release();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 
+	// bloqueia a fila, bloqueia o recurso compartilhado, libera a fila
 	@Override
 	public void obtemPermissaoEscritor() {
 		try {
-			mutexEscritores.acquire();
-			nEscritores++;
-			if (nEscritores == 1)
-				// Bloqueia a entrada de novos leitores no recurso compartilhado
-				permissaoAdicionarNovoLeitor.acquire();
-			mutexEscritores.release();
-			
-			// Obtenho acesso ao recurso
-			mutexRecurso.acquire();
+			filaServico.acquire();
+			acessoRecurso.acquire();
+			filaServico.release();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 
+	// libera o recurso
 	@Override
 	public void liberaPermissaoEscritor() {
-		// Libero acesso ao recurso
-		mutexRecurso.release();
-		
-		try {
-			mutexEscritores.acquire();
-			nEscritores--;
-			if (nEscritores == 0)
-				// Libero a entrada de novos leitores no recurso compartilhado
-				permissaoAdicionarNovoLeitor.release();
-			mutexEscritores.release();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		acessoRecurso.release();
 	}
 
 }
